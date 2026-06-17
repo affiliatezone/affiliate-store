@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>AffiliateZone - Beste Produkte & ehrliche Bewertungen</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -94,15 +97,15 @@
     <header>
         <div class="container">
             <div class="header-content">
-                <div class="logo">🎯 AffiliateZone</div>
+                <div class="logo">🎯 AffiliateZone v2.5</div>
                 <div class="header-buttons">
                     <div id="userSection" style="display: none;">
                         <span class="user-info" id="userEmail"></span>
-                        <button class="btn-primary" onclick="openAdminPanel()">⚙️ Admin</button>
-                        <button class="btn-danger" onclick="logout()">Logout</button>
+                        <button class="btn-primary" id="adminBtn" onclick="openAdminPanel()">⚙️ Admin</button>
+                        <button class="btn-danger" id="logoutBtn" onclick="logout()">Logout</button>
                     </div>
                     <div id="loginSection">
-                        <button class="btn-primary" onclick="openLoginPanel()">Login</button>
+                        <button class="btn-primary" id="loginBtn" onclick="openLoginPanel()">Login</button>
                     </div>
                     <a href="https://instagram.com/_affiliatezone_" target="_blank" style="color: white; text-decoration: none; padding: 10px 20px; background: #e1306c; border-radius: 6px; font-weight: 600;">📱 Instagram</a>
                 </div>
@@ -113,7 +116,7 @@
     <div class="container">
         <!-- Category Filter -->
         <div class="category-filter">
-            <button class="category-btn active" onclick="filterByCategory('alle')">🔥 Alle</button>
+            <button class="category-btn active" id="allCatBtn" onclick="filterByCategory('alle')">🔥 Alle</button>
             <div id="categoryButtons"></div>
         </div>
 
@@ -123,7 +126,7 @@
             <p style="font-size: 14px; margin-bottom: 15px;">Erhalte Benachrichtigungen für neue Produkte!</p>
             <div class="newsletter-input">
                 <input type="email" id="newsletterEmail" placeholder="Deine E-Mail...">
-                <button class="btn-primary" onclick="subscribeNewsletter()">Abonnieren</button>
+                <button class="btn-primary" id="subBtn" onclick="subscribeNewsletter()">Abonnieren</button>
             </div>
         </div>
 
@@ -151,7 +154,7 @@
                 <label>Passwort</label>
                 <input type="password" id="loginPassword" placeholder="admin123">
             </div>
-            <button class="btn-primary" onclick="adminLogin()" style="width: 100%;">Anmelden</button>
+            <button class="btn-primary" id="loginSubmitBtn" onclick="adminLogin()" style="width: 100%;">Anmelden</button>
         </div>
     </div>
 
@@ -206,10 +209,10 @@
             </div>
 
             <div class="tabs">
-                <button class="tab active" onclick="switchTab('products')">📦 Produkte</button>
-                <button class="tab" onclick="switchTab('categories')">🏷️ Kategorien</button>
-                <button class="tab" onclick="switchTab('dashboard')">📊 Dashboard</button>
-                <button class="tab" onclick="switchTab('subscribers')">📧 Abonnenten</button>
+                <button class="tab active" id="tab1" onclick="switchTab(event, 'products')">📦 Produkte</button>
+                <button class="tab" id="tab2" onclick="switchTab(event, 'categories')">🏷️ Kategorien</button>
+                <button class="tab" id="tab3" onclick="switchTab(event, 'dashboard')">📊 Dashboard</button>
+                <button class="tab" id="tab4" onclick="switchTab(event, 'subscribers')">📧 Abonnenten</button>
             </div>
 
             <!-- Products Tab -->
@@ -258,7 +261,7 @@
                 <div class="form-group">
                     <input type="text" id="categoryName" placeholder="Kategoriename">
                 </div>
-                <button class="btn-primary" onclick="addCategory()" style="width: 100%;">➕ Kategorie hinzufügen</button>
+                <button class="btn-primary" id="addCatBtn" onclick="addCategory()" style="width: 100%;">➕ Kategorie hinzufügen</button>
 
                 <h3 style="margin-top: 30px; margin-bottom: 15px;">Kategorien</h3>
                 <div id="categoriesList"></div>
@@ -375,7 +378,8 @@
         }
 
         // ============ TABS ============
-        function switchTab(tab) {
+        function switchTab(e, tab) {
+            e.preventDefault();
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
             
@@ -384,7 +388,7 @@
             if (tab === 'dashboard') { document.getElementById('dashboardTab').classList.add('active'); renderDashboard(); }
             if (tab === 'subscribers') { document.getElementById('subscribersTab').classList.add('active'); renderSubscribers(); }
             
-            event.target.classList.add('active');
+            e.target.classList.add('active');
         }
 
         // ============ PRODUCTS ============
@@ -590,13 +594,13 @@
         function filterByCategory(cat) {
             currentCategory = cat;
             document.querySelectorAll('.category-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            document.getElementById(cat === 'alle' ? 'allCatBtn' : 'catBtn_' + cat).classList.add('active');
             renderProducts();
         }
 
         function renderCategoryButtons() {
             const buttons = categories.map(c => 
-                `<button class="category-btn" onclick="filterByCategory('${c}')">${c}</button>`
+                `<button class="category-btn" id="catBtn_${c}" onclick="filterByCategory('${c}')">${c}</button>`
             ).join('');
             document.getElementById('categoryButtons').innerHTML = buttons;
         }
@@ -637,6 +641,7 @@
 
         function renderCategorySelect() {
             document.getElementById('productCategory').innerHTML = categories.map(c => `<option>${c}</option>`).join('');
+            document.getElementById('editProductCategory').innerHTML = categories.map(c => `<option>${c}</option>`).join('');
         }
 
         // ============ DASHBOARD ============
