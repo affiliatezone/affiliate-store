@@ -20,6 +20,8 @@
         .btn-danger:hover { background: #dc2626; }
         .btn-success { background: #10b981; color: white; }
         .btn-success:hover { background: #059669; }
+        .btn-warning { background: #f59e0b; color: white; }
+        .btn-warning:hover { background: #d97706; }
         .user-info { color: white; font-size: 14px; }
         
         .category-filter { background: #1e293b; padding: 20px; border-radius: 8px; margin-bottom: 30px; display: flex; gap: 10px; flex-wrap: wrap; }
@@ -153,6 +155,48 @@
         </div>
     </div>
 
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Produkt bearbeiten</h2>
+                <button class="close-btn" onclick="closeEditModal()">✕</button>
+            </div>
+            <form id="editProductForm" onsubmit="updateProduct(event)">
+                <div class="form-group">
+                    <label>Produktname</label>
+                    <input type="text" id="editProductName" required>
+                </div>
+                <div class="form-group">
+                    <label>Kategorie</label>
+                    <select id="editProductCategory" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Produktbild (JPG/PNG)</label>
+                    <input type="file" id="editProductImage" accept="image/*" onchange="previewEditImage()">
+                    <div id="editImagePreview"></div>
+                </div>
+                <div class="form-group">
+                    <label>Beschreibung</label>
+                    <textarea id="editProductDescription" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Vorteile</label>
+                    <textarea id="editProductBenefits" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Preis (€)</label>
+                    <input type="number" id="editProductPrice" step="0.01" required>
+                </div>
+                <div class="form-group">
+                    <label>Affiliate-Link</label>
+                    <input type="url" id="editProductLink" required>
+                </div>
+                <button type="submit" class="btn-success" style="width: 100%;">✅ Speichern</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Admin Modal -->
     <div id="adminModal" class="modal">
         <div class="modal-content">
@@ -248,6 +292,7 @@
         let isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
         let currentUser = localStorage.getItem('currentUser') || null;
         let currentCategory = 'alle';
+        let editingProductId = null;
 
         // ============ INIT ============
         window.addEventListener('load', function() {
@@ -402,6 +447,86 @@
             }
         }
 
+        function editProduct(id) {
+            const product = products.find(p => p.id === id);
+            if (!product) return;
+            
+            editingProductId = id;
+            document.getElementById('editProductName').value = product.name;
+            document.getElementById('editProductCategory').value = product.category;
+            document.getElementById('editProductDescription').value = product.description;
+            document.getElementById('editProductBenefits').value = product.benefits;
+            document.getElementById('editProductPrice').value = product.price;
+            document.getElementById('editProductLink').value = product.link;
+            
+            renderEditCategorySelect();
+            
+            if (typeof product.image === 'string' && product.image.startsWith('data:')) {
+                document.getElementById('editImagePreview').innerHTML = `<div class="image-preview"><img src="${product.image}"></div>`;
+            } else {
+                document.getElementById('editImagePreview').innerHTML = '';
+            }
+            
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('active');
+            editingProductId = null;
+        }
+
+        function previewEditImage() {
+            const file = document.getElementById('editProductImage').files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('editImagePreview').innerHTML = `<div class="image-preview"><img src="${e.target.result}"></div>`;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function updateProduct(e) {
+            e.preventDefault();
+            const product = products.find(p => p.id === editingProductId);
+            if (!product) return;
+            
+            const file = document.getElementById('editProductImage').files[0];
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    product.image = e.target.result;
+                    saveEditedProduct();
+                };
+                reader.readAsDataURL(file);
+            } else {
+                saveEditedProduct();
+            }
+        }
+
+        function saveEditedProduct() {
+            const product = products.find(p => p.id === editingProductId);
+            if (!product) return;
+            
+            product.name = document.getElementById('editProductName').value;
+            product.category = document.getElementById('editProductCategory').value;
+            product.description = document.getElementById('editProductDescription').value;
+            product.benefits = document.getElementById('editProductBenefits').value;
+            product.price = parseFloat(document.getElementById('editProductPrice').value);
+            product.link = document.getElementById('editProductLink').value;
+            
+            localStorage.setItem('products', JSON.stringify(products));
+            closeEditModal();
+            renderProducts();
+            renderProductsList();
+            alert('✅ Produkt aktualisiert!');
+        }
+
+        function renderEditCategorySelect() {
+            document.getElementById('editProductCategory').innerHTML = categories.map(c => `<option>${c}</option>`).join('');
+        }
+
         function renderProducts() {
             const search = document.getElementById('searchInput').value.toLowerCase();
             let filtered = products;
@@ -441,7 +566,10 @@
                 <div class="dashboard-item">
                     <div class="dashboard-item-header">
                         <div class="dashboard-item-title">${p.name}</div>
-                        <button class="btn-danger" onclick="deleteProduct(${p.id})">🗑️ Löschen</button>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn-warning" onclick="editProduct(${p.id})">✏️ Bearbeiten</button>
+                            <button class="btn-danger" onclick="deleteProduct(${p.id})">🗑️ Löschen</button>
+                        </div>
                     </div>
                     <div class="dashboard-item-stats">Kategorie: ${p.category} | Preis: €${p.price.toFixed(2)} | Klicks: ${p.clicks}</div>
                 </div>
