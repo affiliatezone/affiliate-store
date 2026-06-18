@@ -452,18 +452,33 @@
         }
 
         function editProduct(id) {
+            console.log('EDIT PRODUCT CALLED WITH ID:', id);
             const product = products.find(p => p.id === id);
-            if (!product) return;
+            console.log('FOUND PRODUCT:', product);
+            if (!product) {
+                alert('❌ Produkt nicht gefunden!');
+                return;
+            }
             
             editingProductId = id;
-            document.getElementById('editProductName').value = product.name;
-            document.getElementById('editProductCategory').value = product.category;
-            document.getElementById('editProductDescription').value = product.description;
-            document.getElementById('editProductBenefits').value = product.benefits;
-            document.getElementById('editProductPrice').value = product.price;
-            document.getElementById('editProductLink').value = product.link;
+            console.log('EDITING PRODUCT ID SET TO:', editingProductId);
+            
+            // Set form values
+            const nameInput = document.getElementById('editProductName');
+            const categorySelect = document.getElementById('editProductCategory');
+            const descInput = document.getElementById('editProductDescription');
+            const benefitsInput = document.getElementById('editProductBenefits');
+            const priceInput = document.getElementById('editProductPrice');
+            const linkInput = document.getElementById('editProductLink');
+            
+            if (nameInput) nameInput.value = product.name;
+            if (descInput) descInput.value = product.description;
+            if (benefitsInput) benefitsInput.value = product.benefits;
+            if (priceInput) priceInput.value = product.price;
+            if (linkInput) linkInput.value = product.link;
             
             renderEditCategorySelect();
+            if (categorySelect) categorySelect.value = product.category;
             
             if (typeof product.image === 'string' && product.image.startsWith('data:')) {
                 document.getElementById('editImagePreview').innerHTML = `<div class="image-preview"><img src="${product.image}"></div>`;
@@ -471,7 +486,11 @@
                 document.getElementById('editImagePreview').innerHTML = '';
             }
             
-            document.getElementById('editModal').classList.add('active');
+            const modal = document.getElementById('editModal');
+            if (modal) {
+                modal.classList.add('active');
+                console.log('EDIT MODAL OPENED');
+            }
         }
 
         function closeEditModal() {
@@ -492,35 +511,51 @@
 
         function updateProduct(e) {
             e.preventDefault();
+            console.log('UPDATE PRODUCT CALLED, EDITING ID:', editingProductId);
+            
             const product = products.find(p => p.id === editingProductId);
-            if (!product) return;
+            if (!product) {
+                alert('❌ Produkt nicht gefunden!');
+                return;
+            }
             
             const file = document.getElementById('editProductImage').files[0];
+            console.log('FILE SELECTED:', file ? 'YES' : 'NO');
             
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
+                    console.log('IMAGE LOADED');
                     product.image = e.target.result;
                     saveEditedProduct();
                 };
                 reader.readAsDataURL(file);
             } else {
+                console.log('NO FILE, SAVING WITHOUT IMAGE');
                 saveEditedProduct();
             }
         }
 
         function saveEditedProduct() {
+            console.log('SAVE EDITED PRODUCT CALLED');
             const product = products.find(p => p.id === editingProductId);
-            if (!product) return;
+            if (!product) {
+                alert('❌ Produkt nicht gefunden!');
+                return;
+            }
             
-            product.name = document.getElementById('editProductName').value;
-            product.category = document.getElementById('editProductCategory').value;
-            product.description = document.getElementById('editProductDescription').value;
-            product.benefits = document.getElementById('editProductBenefits').value;
-            product.price = parseFloat(document.getElementById('editProductPrice').value);
-            product.link = document.getElementById('editProductLink').value;
+            console.log('UPDATING PRODUCT:', product);
+            product.name = document.getElementById('editProductName').value || product.name;
+            product.category = document.getElementById('editProductCategory').value || product.category;
+            product.description = document.getElementById('editProductDescription').value || product.description;
+            product.benefits = document.getElementById('editProductBenefits').value || product.benefits;
+            product.price = parseFloat(document.getElementById('editProductPrice').value) || product.price;
+            product.link = document.getElementById('editProductLink').value || product.link;
             
+            console.log('PRODUCT UPDATED:', product);
             localStorage.setItem('products', JSON.stringify(products));
+            console.log('SAVED TO LOCALSTORAGE');
+            
             closeEditModal();
             renderProducts();
             renderProductsList();
